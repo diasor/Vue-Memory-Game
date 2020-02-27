@@ -1,26 +1,29 @@
 <template>
   <div class="home" aria-label="Memory Game Board">
-    <p role="status">{{gameAnnounce}}</p>
-    <Winning v-if="win" :newGame="newGame" :winningMessage="winningMessage"></Winning>
-    <main class="container" v-else id="main" tabindex="-1" aria-labelledby="gameTitle">
-      <h2 id="gameTitle">Game Board</h2>
-      <section aria-label="Memory Game Controller" class="gameController">
-        <button @click="newGame" class="restart buttonGray">
-          <i class="fa fa-repeat"></i>
-          <span class="reset">Reset</span>
-        </button>
-        <div>
-          <ul class="stars" :aria-label="stars + ' stars left'">
-            <li v-for="(star, index) in stars" :key="index" class="star">
-              <i :class="`${index} fa fa-star`"></i>
-            </li>
-          </ul>
-          <p class="moves">Moves: {{numMoves}}</p>
-        </div>
-      </section>
+    <p role="status" v-if="gameAccessibilityMessage">
+      <b>Accessibilty Text:</b>
+      {{ gameAccessibilityMessage }}
+    </p>
+    <Winning v-if="win" />
 
+    <main class="container" id="main" tabindex="-1" aria-labelledby="gameTitle">
+      <h2 id="gameTitle">Game Board</h2>
+      <div aria-label="Theme selection" id="selection" class="select-container">
+        <label>Select Theme:</label>
+        <select
+          type="text"
+          v-model="gameTheme"
+          name="theme"
+          class="select-theme"
+          @change="changeTemplate(gameTheme)"
+        >
+          <option>Default</option>
+          <option>Disney</option>
+          <option>Harry Potter</option>
+        </select>
+        <p id="gameUpdate">{{ gameUpdate }}</p>
+      </div>
       <section aria-label="Memory Game Board" id="cards">
-        <p id="gameUpdate">{{gameUpdate}}</p>
         <ul class="cards">
           <li
             v-for="(card, index) in this.deck.cards"
@@ -28,17 +31,7 @@
             :aria-label="[ card.flipped ? card.name : '']"
             class="cardItem"
           >
-            <!-- {{card.name}} -->
-            <button
-              aria-describedby="gameUpdate"
-              :aria-label="[ card.flipped ? card.name + ' flipped' : 'card ' + (index+1)]"
-              :class="[ card.match ? 'card match' : card.flipped ? 'card show' : card.close ? 'card close' : 'card']"
-              @click="flipCard(card)"
-              :disabled="card.match"
-            >
-              <span v-if="!card.flipped">?</span>
-              <div v-else :class="deck.cards[index].icon"></div>
-            </button>
+            <Card :card="card" :index="index" @onFlip="flipThisCard(card, index)"></Card>
           </li>
         </ul>
       </section>
@@ -47,284 +40,124 @@
 </template>
 
 <script>
-// @ is an alias to /src
-import Winning from "@/components/Winning.vue";
 import { mapState, mapGetters, mapActions } from "vuex";
+import Card from "@/components/Card.vue";
+import Winning from "@/components/Winning.vue";
 
 export default {
   name: "Home",
-  components: {
-    Winning
-  },
+  components: { Card, Winning },
+  data: () => ({
+    gameTheme: ""
+  }),
   computed: {
     ...mapState([
-      "gameAnnounce",
+      "gameAccessibilityMessage",
       "win",
       "stars",
       "cardsFlipped",
-      "numCardsFlipped",
-      "numMoves",
-      "cardsMatched",
-      "types"
+      "amountCardsFlipped",
+      "amountMoves",
+      "cardsMatched"
     ]),
-    ...mapGetters(["gameUpdate", "deck", "winningMessage"])
-  },
-  created() {
-    this.shuffle(this.deck.cards);
+    ...mapGetters(["deck", "gameUpdate"])
   },
   methods: {
     ...mapActions([
-      "clearGame",
-      "updateDeck",
-      "update_Win",
-      "update_Stars",
-      "clear_CardsFlipped",
-      "update_CardsFlipped",
-      "update_NumCardsFlipped",
-      "update_NumMoves",
-      "clear_CardsMatched",
-      "update_CardsMatched",
-      "update_GameAnnounce"
+      "updateAmountMoves",
+      "updateCardsFlipped",
+      "resetCardsFlipped",
+      "shuffle",
+      "flipCard",
+      "closeCard",
+      "markMatchedCards",
+      "newGame",
+      "updateAccessibilityMessage",
+      "updateWin",
+      "updateStars",
+      "getTemplate"
     ]),
-    shuffle(cards) {
-      this.deck.cards = [];
-      var currentIndex = cards.length,
-        temporaryValue,
-        randomIndex;
-      // While there remain elements to shuffle...
-      while (0 !== currentIndex) {
-        // Pick a remaining element...
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex -= 1;
-        // And swap it with the current element.
-        temporaryValue = cards[currentIndex];
-        cards[currentIndex] = cards[randomIndex];
-        cards[randomIndex] = temporaryValue;
-      }
 
-      this.deck.cards = cards;
-    },
-    newGame() {
-      this.shuffle(this.deck.cards);
-
-      for (let i = 0; i < this.deck.cards.length; i++) {
-        this.deck.cards[i].flipped = false;
-        this.deck.cards[i].close = false;
-        this.deck.cards[i].match = false;
-      }
-
-      this.clearGame();
-    },
-
-    flipCard(card) {
-      this.update_GameAnnounce({ message: "" });
+    flipThisCard(card, index) {
       if (card.flipped) {
-        this.update_GameAnnounce({
-          message: "Card already flipped."
-        });
+        this.updateAccessibilityMessage({ message: "Card already flipped." });
         return;
       } else {
-        this.update_NumMoves({ moves: this.numMoves + 1 });
-        if (this.numMoves < 30) {
-          this.update_Stars({ num: 3 });
-        } else if (this.numMoves < 40) {
-          this.update_Stars({ num: 2 });
-        } else if (this.numMoves < 50) {
-          this.update_Stars({ num: 1 });
-        } else if (this.numMoves > 50) {
-          this.update_Stars({ num: 0 });
-        }
+        this.updateAmountMoves({ moves: this.amountMoves + 1 });
+        this.updateStars();
       }
       // only allow flips if there are < or = 2 flipped cards
-      if (this.numCardsFlipped < 2) {
-        if (this.numCardsFlipped < 1) {
-          this.update_GameAnnounce({
-            message: card.name + " flipped."
-          });
+      if (this.amountCardsFlipped < 2) {
+        if (this.amountCardsFlipped < 1) {
+          this.updateAccessibilityMessage({ message: `${card.name} flipped.` });
         }
-        card.flipped = true;
-        this.update_NumCardsFlipped({ num: this.numCardsFlipped + 1 });
-        this.update_CardsFlipped({ cards: card });
-        // MATCH
+        this.flipCard({ index, flipped: true });
+        this.updateCardsFlipped({ cards: card });
+        // was there a match?
         if (
-          this.numCardsFlipped === 2 &&
-          this.cardsFlipped[0].name == this.cardsFlipped[1].name
+          this.amountCardsFlipped === 2 &&
+          this.cardsFlipped[0].name === this.cardsFlipped[1].name
         ) {
-          let matchesRemaining =
-            this.deck.cards.length / 2 - this.cardsMatched.length - 1;
-          for (let i = 0; i < this.deck.cards.length; i++) {
-            if (this.deck.cards[i].name == this.cardsFlipped[0].name) {
-              this.deck.cards[i].match = true;
-            }
-            this.update_GameAnnounce({
-              message:
-                card.name +
-                " flipped. Match found! " +
-                matchesRemaining +
-                " matches left!"
-            });
-          }
-          this.update_CardsMatched({ cards: this.cardsFlipped });
-          this.clear_CardsFlipped({ cards: [] });
-          this.update_NumCardsFlipped({ num: 0 });
-          //if number of cards matched = number or cards, then win the game
-          if (this.cardsMatched.length === this.deck.cards.length / 2) {
-            this.update_Win({ win: true });
-            this.update_GameAnnounce({
-              message: this.winningMessage
-            });
+          // there is a match
+          this.markMatchedCards({ cardName: card.name });
+          const remaining = this.deck.cards.length / 2 - this.cardsMatched;
+          this.updateAccessibilityMessage({
+            message: `${card.name} flipped. Match found! ${remaining} matches left.`
+          });
+
+          // reset flipped cards
+          this.resetCardsFlipped({ cards: this.cardsFlipped });
+          // if number of cards matched = number or cards, then win the game
+          if (this.cardsMatched === this.deck.cards.length / 2) {
+            this.updateWin({ win: true });
+            this.updateAccessibilityMessage({ message: this.winningMessage });
           }
         }
-        // NO MATCH
+        // if there was not match
         else if (
-          this.numCardsFlipped === 2 &&
+          this.amountCardsFlipped === 2 &&
           this.cardsFlipped[0].name !== this.cardsFlipped[1].name
         ) {
-          // Wait before closing mismatched card
-          this.update_GameAnnounce({
-            message: card.name + " flipped. No match."
+          // wait before closing mismatched card
+          this.updateAccessibilityMessage({
+            message: `${card.name} flipped. No match. `
           });
           setTimeout(() => {
             for (let i = 0; i < this.deck.cards.length; i++) {
               if (this.deck.cards[i].flipped && !this.deck.cards[i].match) {
-                this.deck.cards[i].flipped = false;
-                this.deck.cards[i].close = true;
+                this.closeCard({ index: i, flipped: false, close: true });
               }
             }
-            this.clear_CardsFlipped({ cards: [] });
-            this.update_NumCardsFlipped({ num: 0 });
+            this.resetCardsFlipped();
             return;
           }, 900);
         }
       }
+    },
+
+    changeTemplate(newTheme) {
+      // get thee new theme information
+      this.getTemplate(newTheme);
+      // reset values
+      this.newGame();
+      // shuffle a new deck
+      this.shuffle();
     }
+  },
+
+  created() {
+    this.gameTheme = "Default";
+    // get the default theme information
+    this.getTemplate(this.gameTheme);
+    // shuffle a new deck
+    this.shuffle();
   }
 };
 </script>
 
 <style lang="scss">
-// Cards
-.cards {
-  margin: 2em auto;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-gap: 0.5em;
-  padding: 0;
-
-  .cardItem {
-    list-style: none;
-  }
-
-  .card {
-    height: 90px;
-    width: 90px;
-    font-size: 4em;
-    background: #061018 url(/img/fabric.5959b418.png);
-    background-blend-mode: soft-light;
-    border: 1px solid #acacac;
-    color: #ffffff;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 5px 2px 20px 0 rgba(46, 61, 73, 0.5);
-  }
-
-  .show {
-    font-size: 33px;
-    background: #0b5891 url(/img/fabric.5959b418.png);
-    cursor: default;
-  }
-
-  .match {
-    cursor: default;
-    background: #0e4b5a url(/img/fabric.5959b418.png);
-    font-size: 33px;
-    animation-name: match-animation;
-    -webkit-animation-name: match-animation;
-    animation-duration: 1000ms;
-    -webkit-animation-duration: 1000ms;
-    transform-origin: 70% 70%;
-    animation-iteration-count: 1000ms;
-    animation-timing-function: linear;
-  }
-
-  .close {
-    cursor: default;
-    animation-name: close;
-    -webkit-animation-name: close;
-    animation-duration: 1000ms;
-    -webkit-animation-duration: 1000ms;
-    -webkit-animation-fill-mode: both;
-    animation-fill-mode: both;
-    &:hover,
-    &:focus {
-      background-blend-mode: hard-light;
-      color: #112c3e;
-      border: 2px solid #112c3e;
-    }
-  }
-}
-
-@keyframes match-animation {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  60% {
-    transform: scale(0.9);
-  }
-}
-
-@keyframes close {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(5deg);
-  }
-  80% {
-    transform: rotate(-5deg);
-  }
-}
-
-// Game Controller
-.gameController .stars {
-  padding: 0px;
-  display: inline-block;
-  margin: 2em auto 0;
-}
-
-.star {
-  list-style: none;
-  display: inline-block;
-  margin: 0 0.2em;
-  font-size: 1.5em;
-}
-.moves {
-  font-weight: bold;
-}
-
-.gameController .restart {
-  float: right;
-  cursor: pointer;
-}
-
-// Overall
-[role="status"] {
-  height: 0;
+.home {
   margin: 0;
-  overflow: hidden;
-  color: #960000;
-  font-weight: bold;
-}
-
-#gameUpdate {
-  height: 0;
-  margin: 0;
-  overflow: hidden;
 }
 
 .container {
@@ -332,52 +165,123 @@ export default {
   justify-content: center;
   align-items: center;
   flex-direction: column;
-}
+  margin-top: 0;
 
-// Buttons
-
-.buttonGray {
-  background: #2e3d49;
-  font-size: 1em;
-  color: #ffffff;
-  border-radius: 8px;
-  cursor: pointer;
-  justify-content: center;
-  align-items: center;
-  padding: 0.5em;
-  box-shadow: 5px 2px 20px 0 rgba(46, 61, 73, 0.5);
-  &:hover,
-  &:focus {
-    background: #0b5891;
+  > h2 {
+    margin: 0;
   }
 }
 
-.reset {
-  padding-left: 1em;
-}
+.cards {
+  margin: 0.3em auto;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-gap: 0.5em;
+  padding: 0;
 
-// MEDIA QUERIES
-@media (min-width: 350px) {
-  .cards {
-    grid-template-columns: repeat(3, 1fr);
-    .card {
-      height: 100px;
-      width: 100px;
-    }
-  }
-}
-@media (min-width: 450px) {
-  .cards {
+  @media (min-width: 450px) {
     grid-gap: 1em;
-    .card {
-      height: 125px;
-      width: 125px;
-    }
   }
-}
-@media (min-width: 600px) {
-  .cards {
+
+  @media (min-width: 600px) {
+    grid-gap: 1em;
     grid-template-columns: repeat(4, 1fr);
   }
+
+  // Game Controller
+  .gameController .stars {
+    padding: 0px;
+    display: inline-block;
+    margin: 2em auto 0;
+  }
+
+  .star {
+    list-style: none;
+    display: inline-block;
+    margin: 0 0.2em;
+    font-size: 1.5em;
+  }
+
+  .moves {
+    font-weight: bold;
+  }
+
+  .gameController .restart {
+    float: right;
+    cursor: pointer;
+  }
+
+  // Overall
+  [role="status"] {
+    height: 0;
+    margin: 0;
+    overflow: hidden;
+    font-weight: bold;
+  }
+
+  #gameUpdate {
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .reset {
+    padding-left: 1em;
+  }
+
+  > p {
+    margin-top: 0;
+    background-color: pink;
+  }
+}
+
+/* select styles */
+.select-container {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 0.3rem;
+
+  > label {
+    margin-top: 0.6rem;
+    padding: 0.2rem 0.5rem;
+    width: auto;
+  }
+
+  > p {
+    width: 20rem;
+  }
+}
+
+.select-theme {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+  padding: 0.6em 1.4em 0.5em 0.8em;
+  width: 10rem;
+  // max-width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  border: 1px solid #aaa;
+  box-shadow: 0 1px 0 1px rgba(0, 0, 0, 0.04);
+  border-radius: 0.5em;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  color: black;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"),
+    linear-gradient(to bottom, #ffffff 0%, #e5e5e5 100%);
+  background-repeat: no-repeat, repeat;
+  background-position: right 0.7em top 50%, 0 0;
+  background-size: 0.65em auto, 100%;
+  &:-ms-expand {
+    display: none;
+  }
+}
+.select-theme option {
+  font-weight: normal;
 }
 </style>
