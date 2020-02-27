@@ -6,7 +6,9 @@
         aria-labelledby="congratulations winningMsg"
         v-focus
         tabindex="-1"
-      >Congratulations!</h2>
+      >
+        Congratulations!
+      </h2>
       <ul class="stars" :aria-label="stars + ' stars left'">
         <li v-for="(star, index) in stars" :key="index">
           <i :class="`${index} fa fa-star`"></i>
@@ -19,23 +21,43 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import Vue from 'vue';
+import { mapState, mapGetters, mapActions } from 'vuex';
+import VueConfetti from 'vue-confetti';
+Vue.use(VueConfetti);
+
 export default {
-  name: "Winning",
+  name: 'Winning',
   computed: {
-    ...mapState(["stars", "templateName"]),
-    ...mapGetters(["winningMessage"])
+    ...mapState(['stars', 'templateName']),
+    ...mapGetters(['winningMessage']),
   },
   methods: {
-    ...mapActions(["newGame", "shuffle", "getTemplate"]),
+    ...mapActions(['newGame', 'shuffle', 'getTemplate']),
+
+    startConfetti() {
+      this.$confetti.start();
+    },
+
+    stopConfetti() {
+      this.$confetti.stop();
+    },
 
     playAgain() {
       // play again with the last template selected
-      this.getTemplate(this.templateName);
+      this.getTemplate('Default');
       this.newGame();
       this.shuffle();
-    }
-  }
+    },
+  },
+
+  mounted() {
+    this.startConfetti();
+  },
+
+  beforeDestroy() {
+    this.stopConfetti();
+  },
 };
 </script>
 

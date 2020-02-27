@@ -49,12 +49,17 @@ I made several changes to:
   - allowing the card to have more clean logic.
   - redefining the props of the Winning component and its logic. Namely: not sending a function as parameter, and defining what is needed for the component, within it.
 
-- add the posibility of templates by theme:
+- <b>add the posibility of templates by theme</b>:
 
   - send the card loading based on the template to a fake api (this will allow to have the templates and card loading eventually done from an actual api, or a JSON file or another interface -away from the state -).
   - remove the type loading from the state.
   - loading the templates.
   - reshufle with a new template.
+
+- <b>added an animation when the user wins</b>:
+
+  - added a confetti animation when the Winning component is loaded.
+  - stopped the animation before destroy.
 
 - improve the code with the use of ES6.
 
