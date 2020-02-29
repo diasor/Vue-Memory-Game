@@ -9,6 +9,7 @@ export default new Vuex.Store({
     // template
     templateName: 'default',
     templateUseIcons: true,
+    iconPrefix: 'fa fa-',
     templateImages: [],
     // game
     win: false,
@@ -40,17 +41,19 @@ export default new Vuex.Store({
     UPDATE_TEMPLATE(state, templatePayload) {
       state.templateName = templatePayload.name;
       state.templateUseIcons = templatePayload.useIcons;
+      state.iconPrefix = templatePayload.iconPrefix;
       state.templateImages = templatePayload.images;
       state.templateFolder = templatePayload.folder;
     },
 
     SHUFFLE_DECK(state) {
       state.deck.cards = [];
+      console.log('state.templateUseIcons', state.templateUseIcons);
       for (let index = 0; index < state.templateImages.length; index++) {
         state.deck.cards.push({
           name: state.templateImages[index],
           icon: state.templateUseIcons
-            ? `fa fa-${state.templateImages[index]}`
+            ? `${state.iconPrefix}${state.templateImages[index]}`
             : null,
           img: !state.templateUseIcons
             ? `img/${state.templateFolder}/${state.templateImages[index]}.png`
@@ -63,7 +66,7 @@ export default new Vuex.Store({
         state.deck.cards.push({
           name: state.templateImages[index],
           icon: state.templateUseIcons
-            ? `fa fa-${state.templateImages[index]}`
+            ? `${state.iconPrefix}${state.templateImages[index]}`
             : null,
           img: !state.templateUseIcons
             ? `img/${state.templateFolder}/${state.templateImages[index]}.png`
@@ -167,12 +170,18 @@ export default new Vuex.Store({
       const templateInformation = templates.getTemplateInformation(
         templateName,
       );
+      console.log('template name', templateInformation.name);
+      console.log('template iconPrefix', templateInformation.iconPrefix);
       commit('UPDATE_TEMPLATE', {
         name: templateInformation.name,
         useIcons:
           templateInformation.useIcons === undefined
             ? false
             : templateInformation.useIcons,
+        iconPrefix:
+          templateInformation.iconPrefix === undefined
+            ? false
+            : templateInformation.iconPrefix,
         images:
           templateInformation.images === undefined
             ? []

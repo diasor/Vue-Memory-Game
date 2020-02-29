@@ -5,6 +5,7 @@ export default {
         return {
           name: 'default',
           useIcons: true,
+          iconPrefix: 'fa fa-',
           images: [
             'car',
             'bug',
@@ -14,6 +15,23 @@ export default {
             'diamond',
             'heart',
             'bell',
+          ],
+          folder: '',
+        };
+      case 'Animals':
+        return {
+          name: 'animals',
+          useIcons: true,
+          iconPrefix: 'fa fa-',
+          images: [
+            'dog',
+            'cat',
+            'fish',
+            'dove',
+            'horse',
+            'hippo',
+            'feather',
+            'spider',
           ],
           folder: '',
         };
@@ -30,6 +48,30 @@ export default {
             'dobby',
             'dumbledore',
             'hogwarts',
+          ],
+          folder: 'harry-potter',
+        };
+      case 'Harry Potter Extended':
+        return {
+          name: 'harry-potter',
+          useIcons: false,
+          images: [
+            'head',
+            'deathly hallows',
+            'heart',
+            'sorting hat',
+            'car',
+            'dobby',
+            'dumbledore',
+            'hogwarts',
+            // extended
+            'hogwarts-emblem',
+            'no-good',
+            'platform',
+            'siluetes',
+            'lego',
+            'patronum',
+            'snitch',
           ],
           folder: 'harry-potter',
         };

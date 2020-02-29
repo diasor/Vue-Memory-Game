@@ -18,20 +18,26 @@
           @change="changeTemplate(gameTheme)"
         >
           <option>Default</option>
+          <option>Animals</option>
           <option>Disney</option>
           <option>Harry Potter</option>
+          <option>Harry Potter Extended</option>
         </select>
-        <p id="gameUpdate">{{ gameUpdate }}</p>
       </div>
       <section aria-label="Memory Game Board" id="cards">
-        <ul class="cards">
+        <ul :class="['cards', { 'cards__extended': extended }]">
           <li
             v-for="(card, index) in this.deck.cards"
             :key="index"
-            :aria-label="[ card.flipped ? card.name : '']"
+            :aria-label="[card.flipped ? card.name : '']"
             class="cardItem"
           >
-            <Card :card="card" :index="index" @onFlip="flipThisCard(card, index)"></Card>
+            <Card
+              :card="card"
+              :index="index"
+              :extended="extended"
+              @onFlip="flipThisCard(card, index)"
+            ></Card>
           </li>
         </ul>
       </section>
@@ -48,7 +54,8 @@ export default {
   name: "Home",
   components: { Card, Winning },
   data: () => ({
-    gameTheme: ""
+    gameTheme: "",
+    columns: 0
   }),
   computed: {
     ...mapState([
@@ -60,7 +67,10 @@ export default {
       "amountMoves",
       "cardsMatched"
     ]),
-    ...mapGetters(["deck", "gameUpdate"])
+    ...mapGetters(["deck", "gameUpdate"]),
+    extended() {
+      return this.deck.cards.length > 16;
+    }
   },
   methods: {
     ...mapActions([
@@ -132,6 +142,7 @@ export default {
             return;
           }, 900);
         }
+        console.log("CARD FLIP icon", card.icon);
       }
     },
 
@@ -156,6 +167,8 @@ export default {
 </script>
 
 <style lang="scss">
+$totalColumns: var(--columns);
+
 .home {
   margin: 0;
 }
@@ -188,6 +201,15 @@ export default {
     grid-template-columns: repeat(4, 1fr);
   }
 
+  &__extended {
+    @media (min-width: 450px) {
+      grid-gap: 0.5em;
+    }
+
+    @media (min-width: 600px) {
+      grid-template-columns: repeat(6, 1fr);
+    }
+  }
   // Game Controller
   .gameController .stars {
     padding: 0px;
@@ -256,12 +278,11 @@ export default {
 
 .select-theme {
   display: block;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.3;
   padding: 0.6em 1.4em 0.5em 0.8em;
-  width: 10rem;
-  // max-width: 100%;
+  width: 12rem;
   box-sizing: border-box;
   margin: 0;
   border: 1px solid #aaa;

@@ -65,6 +65,15 @@ I made several changes to:
 
 - several style changes to allow the use of images on the new templates, as well as some other styles improvements.
 
+- <b>add the feature of an extended templates by theme</b>:
+
+  - added more columns on the extended theme
+  - added a new theme with more cards
+  - fixed the styles
+  - improved some other previous styles
+
+- added a template for animal icons
+
 ### Solved game
 
 This section shows how the game looks like with the new templates.

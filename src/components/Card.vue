@@ -2,14 +2,14 @@
   <section>
     <button
       aria-describedby="gameUpdate"
-      :aria-label="[ card.flipped ? card.name + ' flipped' : 'card ' + (index+1)]"
-      :class="[ card.match ? 'card match' : card.flipped ? 'card show' : card.close ? 'card close' : 'card']"
+      :aria-label="[ card.flipped ? card.name + ' flipped' : 'card ' + (index + 1)]"
+      :class="cardClass"
       @click="flipCard()"
       :disabled="card.match"
     >
       <span v-if="!card.flipped">?</span>
-      <div v-else-if="card.icon !== null" :class="card.icon" />
-      <div v-else class="card card__svg">
+      <div v-else-if="card.icon !== null" :class="card.icon"></div>
+      <div v-else :class="[ extended ? 'card__svg-extended': 'card__svg']">
         <img v-if="card.img" :src="imageSource" />
       </div>
     </button>
@@ -19,16 +19,35 @@
 <script>
 export default {
   name: "Card",
-  props: ["card", "index"],
+  props: ["card", "index", "extended"],
   computed: {
     imageSource() {
       return this.card.img ? require(`../assets/${this.card.img}`) : "";
+    },
+
+    cardClass() {
+      const extendedClass = this.extended ? "card__extended" : "";
+      if (this.card.match) {
+        return `card ${extendedClass} match`;
+      } else if (this.card.flipped) {
+        return `card ${extendedClass} show`;
+      } else if (this.card.close) {
+        return `card ${extendedClass} close`;
+      } else {
+        return `card ${extendedClass}`;
+      }
     }
   },
   methods: {
     flipCard() {
+      console.log("CARD", JSON.stringify(this.card.icon));
       this.$emit("onFlip");
+      console.log("AFTER FLIP", JSON.stringify(this.card.icon));
     }
+  },
+
+  created() {
+    console.log("CARD", this.card.icon);
   }
 };
 </script>
@@ -58,22 +77,35 @@ export default {
     width: 125px;
   }
 
-  @media (min-width: 600px) {
-    height: 125px;
-    width: 125px;
-  }
-
   &__svg {
-    // align-content: center;
     height: 125px;
     width: 125px;
-
     margin: -2px 0 0 0;
     padding: 0;
     border-radius: 0.5rem;
     > img {
       height: 125px;
       width: 125px;
+      margin: 0;
+      padding: 0;
+      border-radius: 0.5rem;
+    }
+  }
+
+  &__extended {
+    height: 112px;
+    width: 112px;
+  }
+
+  &__svg-extended {
+    height: 112px;
+    width: 112px;
+    margin: -2px 0 0 0;
+    padding: 0;
+    border-radius: 0.5rem;
+    > img {
+      height: 112px;
+      width: 112px;
       margin: 0;
       padding: 0;
       border-radius: 0.5rem;
