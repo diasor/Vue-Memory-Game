@@ -48,7 +48,6 @@ export default new Vuex.Store({
 
     SHUFFLE_DECK(state) {
       state.deck.cards = [];
-      console.log('state.templateUseIcons', state.templateUseIcons);
       for (let index = 0; index < state.templateImages.length; index++) {
         state.deck.cards.push({
           name: state.templateImages[index],
@@ -170,8 +169,6 @@ export default new Vuex.Store({
       const templateInformation = templates.getTemplateInformation(
         templateName,
       );
-      console.log('template name', templateInformation.name);
-      console.log('template iconPrefix', templateInformation.iconPrefix);
       commit('UPDATE_TEMPLATE', {
         name: templateInformation.name,
         useIcons:

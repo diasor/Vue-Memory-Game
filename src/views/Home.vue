@@ -142,7 +142,6 @@ export default {
             return;
           }, 900);
         }
-        console.log("CARD FLIP icon", card.icon);
       }
     },
 

@@ -40,14 +40,8 @@ export default {
   },
   methods: {
     flipCard() {
-      console.log("CARD", JSON.stringify(this.card.icon));
       this.$emit("onFlip");
-      console.log("AFTER FLIP", JSON.stringify(this.card.icon));
     }
-  },
-
-  created() {
-    console.log("CARD", this.card.icon);
   }
 };
 </script>
